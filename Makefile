@@ -16,8 +16,11 @@ MODULE6=$(MAKEFILE_DIR)/module-6
 MODULE7=$(MAKEFILE_DIR)/module-7
 MODULE8=$(MAKEFILE_DIR)/module-8
 
-FACIAL_RECOGNITION_BASIC_PATH = $(MODULE1)
-FACIAL_RECOGNITION_BASIC_APP=$(MODULE1)/app.py
+FACIAL_RECOGNITION_BASIC_PATH=$(MODULE1)
+FACIAL_RECOGNITION_BASIC_APP=$(FACIAL_RECOGNITION_BASIC_PATH)/app.py
+
+HANDWRITTEN_DIGITS_PATH=$(MODULE2)
+HANDWRITTEN_DIGITS_APP=$(HANDWRITTEN_DIGITS_PATH)/app.py
 
 # PYTHON CONFIG ###############################################################
 
@@ -66,3 +69,22 @@ basic-facial-app: ## executes the basic facial recognition app
 	@cd $(FACIAL_RECOGNITION_BASIC_PATH) && \
 		python $(FACIAL_RECOGNITION_BASIC_APP)
 	@echo "completed the basic facial recognition app"
+
+.PHONY: handwritten-digits-ml-app-setup
+handwritten-digits-ml-app-setup: ## setup dependencies and precursors for the basic hand written analog to digital numbers
+	@echo "setting up dependencies and precursors for the hand written analog to digital numbers"
+	@cd $(HANDWRITTEN_DIGITS_PATH) && conda env create -f environment.yml
+
+.PHONY: handwritten-digits-ml-app-train
+handwritten-digits-ml-app-train: ## executes the basic hand written analog to digital numbers training
+	@echo "starting the hand written analog to digital numbers"
+	@cd $(HANDWRITTEN_DIGITS_PATH) && \
+		python $(HANDWRITTEN_DIGITS_APP) --mode train
+	@echo "completed the hand written analog to digital numbers"
+
+.PHONY: handwritten-digits-ml-app-infer
+handwritten-digits-ml-app-infer: ## executes the basic hand written analog to digital numbers inference
+	@echo "starting the hand written analog to digital numbers"
+	@cd $(HANDWRITTEN_DIGITS_PATH) && \
+		python $(HANDWRITTEN_DIGITS_APP) --mode infer
+	@echo "completed the hand written analog to digital numbers"

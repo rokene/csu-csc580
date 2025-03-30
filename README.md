@@ -30,7 +30,6 @@ For a list of commands: `make`
 One time setup.
 
 ```bash
-# One time setup
 make basic-facial-app-setup
 ```
 
@@ -39,8 +38,35 @@ Make sure you are in the `faceenv` conda env.
 ```bash
 conda activate faceenv
 ```
+
 Execute the basic facial app.
 
 ```bash
 make basic-facial-app
+```
+
+### Handwritten Digits App
+
+One time setup
+
+```bash
+make handwritten-digits-ml-app-setup
+```
+
+Make sure you are in the `mnist-tf` conda env.
+
+```bash
+conda activate mnist-tf
+```
+
+Execute the hand written ml app training
+
+```bash
+make handwritten-digits-ml-app-train
+```
+
+Execute the hand written ml app inference
+
+```bash
+make handwritten-digits-ml-app-infer
 ```
