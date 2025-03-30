@@ -8,6 +8,52 @@ import matplotlib.gridspec as gridspec
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "mnist_model.keras")
 
+def test_additional_layer():
+    x_train, y_train, x_test, y_test = load_data()
+
+    # Split validation set
+    x_val = x_train[-5000:]
+    y_val = y_train[-5000:]
+    x_train = x_train[:-5000]
+    y_train = y_train[:-5000]
+
+    # 👇 Configure how many hidden layers to test
+    layer_counts = [1, 2, 3]
+
+    results = []
+
+    print("🏗️ Testing different network depths...\n")
+    for num_layers in layer_counts:
+        print(f"🔧 Training with {num_layers} hidden layer(s)...")
+        model = build_model(hidden_units=512, learning_rate=0.1, num_layers=num_layers)
+
+        model.fit(
+            x_train, y_train,
+            epochs=10,
+            batch_size=100,
+            validation_data=(x_val, y_val),
+            verbose=0
+        )
+
+        test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
+        results.append((f"{num_layers} layer(s)", test_acc))
+        print(f"   → Test Accuracy: {test_acc:.4f}\n")
+
+    # Plot comparison
+    labels = [label for label, _ in results]
+    accuracies = [acc for _, acc in results]
+
+    plt.figure(figsize=(8, 5))
+    plt.bar(labels, accuracies, color='skyblue')
+    plt.ylabel("Test Accuracy")
+    plt.ylim(0.9, 1.0)
+    plt.title("Effect of Network Depth on MNIST Accuracy")
+    plt.grid(axis='y')
+    plt.savefig("layer_test_results.png", dpi=300)
+    plt.show()
+    print("📊 Layer test results saved as layer_test_results.png")
+
+
 def test_learning_rates():
     x_train, y_train, x_test, y_test = load_data()
 
@@ -59,12 +105,15 @@ def load_data():
     return x_train, y_train, x_test, y_test
 
 # Build model
-def build_model(hidden_units=512, activation='relu', learning_rate=0.5, optimizer_type='sgd'):
-    model = models.Sequential([
-        layers.Input(shape=(784,)),
-        layers.Dense(hidden_units, activation=activation),
-        layers.Dense(10, activation='softmax')
-    ])
+def build_model(hidden_units=512, activation='relu', learning_rate=0.5, optimizer_type='sgd', num_layers=1):
+    model = models.Sequential()
+    model.add(layers.Input(shape=(784,)))
+
+    # Add 1 or more hidden layers
+    for _ in range(num_layers):
+        model.add(layers.Dense(hidden_units, activation=activation))
+
+    model.add(layers.Dense(10, activation='softmax'))
 
     # Choose optimizer
     if optimizer_type.lower() == 'sgd':
@@ -74,7 +123,6 @@ def build_model(hidden_units=512, activation='relu', learning_rate=0.5, optimize
     else:
         raise ValueError(f"Unsupported optimizer: {optimizer_type}")
 
-    # Compile the model
     model.compile(
         optimizer=optimizer,
         loss='categorical_crossentropy',
@@ -206,7 +254,8 @@ def run_inference():
 # CLI entry point
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="MNIST Digit Classifier")
-    parser.add_argument("--mode", choices=["train", "infer", "lrtest"], required=True, help="Run mode: train, infer, or lrtest")
+    parser.add_argument("--mode", choices=["train", "infer", "lrtest", "layerstest"], required=True,
+                        help="Run mode: train, infer, lrtest, or layerstest")
     args = parser.parse_args()
 
     if args.mode == "train":
@@ -215,3 +264,5 @@ if __name__ == "__main__":
         run_inference()
     elif args.mode == "lrtest":
         test_learning_rates()
+    elif args.mode == "layerstest":
+        test_additional_layer()

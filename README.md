@@ -76,3 +76,9 @@ Execute the learning rate test
 ```bash
 make handwritten-digits-ml-app-lrtest
 ```
+
+Execute the hidden layers test
+
+```bash
+make handwritten-digits-ml-app-ltest
+```

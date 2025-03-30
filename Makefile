@@ -95,3 +95,10 @@ handwritten-digits-ml-app-lrtest: ## executes the learning rate test in basic ha
 	@cd $(HANDWRITTEN_DIGITS_PATH) && \
 		python $(HANDWRITTEN_DIGITS_APP) --mode lrtest
 	@echo "completed the learning rate test hand written analog to digital numbers"
+
+.PHONY: handwritten-digits-ml-app-ltest
+handwritten-digits-ml-app-ltest: ## executes the layers rate test in basic hand written analog to digital numbers test learning rates
+	@echo "starting layers rate test the hand written analog to digital numbers"
+	@cd $(HANDWRITTEN_DIGITS_PATH) && \
+		python $(HANDWRITTEN_DIGITS_APP) --mode layerstest
+	@echo "completed the layers rate test hand written analog to digital numbers"
