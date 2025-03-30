@@ -70,3 +70,9 @@ Execute the hand written ml app inference
 ```bash
 make handwritten-digits-ml-app-infer
 ```
+
+Execute the learning rate test
+
+```bash
+make handwritten-digits-ml-app-lrtest
+```

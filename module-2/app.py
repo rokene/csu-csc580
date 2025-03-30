@@ -8,6 +8,47 @@ import matplotlib.gridspec as gridspec
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "mnist_model.keras")
 
+def test_learning_rates():
+    x_train, y_train, x_test, y_test = load_data()
+
+    # Split validation set
+    x_val = x_train[-5000:]
+    y_val = y_train[-5000:]
+    x_train = x_train[:-5000]
+    y_train = y_train[:-5000]
+
+    learning_rates = [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0]
+    test_accuracies = []
+
+    print("📊 Testing different learning rates...\n")
+    for lr in learning_rates:
+        print(f"🔧 Training with learning rate: {lr}")
+        model = build_model(learning_rate=lr)
+
+        model.fit(
+            x_train, y_train,
+            epochs=10,  # shorter training for quick comparison
+            batch_size=100,
+            validation_data=(x_val, y_val),
+            verbose=0
+        )
+
+        test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
+        test_accuracies.append(test_acc)
+        print(f"   → Test Accuracy: {test_acc:.4f}\n")
+
+    # Plot the results
+    plt.figure(figsize=(8, 5))
+    plt.plot(learning_rates, test_accuracies, marker='o')
+    plt.xscale('log')
+    plt.xlabel("Learning Rate (log scale)")
+    plt.ylabel("Test Accuracy")
+    plt.title("Effect of Learning Rate on Test Accuracy")
+    plt.grid(True)
+    plt.savefig("lr_test_results.png", dpi=300)
+    plt.show()
+    print("📈 Learning rate test results saved as lr_test_results.png")
+
 # Load and preprocess the data
 def load_data():
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
@@ -165,10 +206,12 @@ def run_inference():
 # CLI entry point
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="MNIST Digit Classifier")
-    parser.add_argument("--mode", choices=["train", "infer"], required=True, help="Run mode: train or infer")
+    parser.add_argument("--mode", choices=["train", "infer", "lrtest"], required=True, help="Run mode: train, infer, or lrtest")
     args = parser.parse_args()
 
     if args.mode == "train":
         train_model()
     elif args.mode == "infer":
         run_inference()
+    elif args.mode == "lrtest":
+        test_learning_rates()

@@ -88,3 +88,10 @@ handwritten-digits-ml-app-infer: ## executes the basic hand written analog to di
 	@cd $(HANDWRITTEN_DIGITS_PATH) && \
 		python $(HANDWRITTEN_DIGITS_APP) --mode infer
 	@echo "completed the hand written analog to digital numbers"
+
+.PHONY: handwritten-digits-ml-app-lrtest
+handwritten-digits-ml-app-lrtest: ## executes the learning rate test in basic hand written analog to digital numbers test learning rates
+	@echo "starting learning rate test the hand written analog to digital numbers"
+	@cd $(HANDWRITTEN_DIGITS_PATH) && \
+		python $(HANDWRITTEN_DIGITS_APP) --mode lrtest
+	@echo "completed the learning rate test hand written analog to digital numbers"
