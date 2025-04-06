@@ -8,6 +8,51 @@ import matplotlib.gridspec as gridspec
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "mnist_model.keras")
 
+def test_batch_sizes():
+    x_train, y_train, x_test, y_test = load_data()
+
+    # Split validation set
+    x_val = x_train[-5000:]
+    y_val = y_train[-5000:]
+    x_train = x_train[:-5000]
+    y_train = y_train[:-5000]
+
+    batch_sizes = [16, 32, 64, 100, 128, 256]
+    results = []
+
+    print("📦 Testing different batch sizes...\n")
+    for batch_size in batch_sizes:
+        print(f"🔧 Training with batch size: {batch_size}")
+        model = build_model(hidden_units=512, learning_rate=0.1)
+
+        model.fit(
+            x_train, y_train,
+            epochs=10,
+            batch_size=batch_size,
+            validation_data=(x_val, y_val),
+            verbose=0
+        )
+
+        test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
+        results.append((batch_size, test_acc))
+        print(f"Test Accuracy: {test_acc:.4f}\n")
+
+    # Plot comparison
+    sizes = [str(bs) for bs, _ in results]
+    accuracies = [acc for _, acc in results]
+
+    plt.figure(figsize=(8, 5))
+    plt.bar(sizes, accuracies, color='lightcoral')
+    plt.xlabel("Batch Size")
+    plt.ylabel("Test Accuracy")
+    plt.ylim(0.9, 1.0)
+    plt.title("Effect of Batch Size on MNIST Accuracy")
+    plt.grid(axis='y')
+    plt.savefig("batchsize_test_results.png", dpi=300)
+    plt.show()
+    print("📊 Batch size test results saved as batchsize_test_results.png")
+
+
 def test_additional_layer():
     x_train, y_train, x_test, y_test = load_data()
 
@@ -17,14 +62,13 @@ def test_additional_layer():
     x_train = x_train[:-5000]
     y_train = y_train[:-5000]
 
-    # 👇 Configure how many hidden layers to test
     layer_counts = [1, 2, 3]
 
     results = []
 
-    print("🏗️ Testing different network depths...\n")
+    print("Testing different network depths...\n")
     for num_layers in layer_counts:
-        print(f"🔧 Training with {num_layers} hidden layer(s)...")
+        print(f"Training with {num_layers} hidden layer(s)...")
         model = build_model(hidden_units=512, learning_rate=0.1, num_layers=num_layers)
 
         model.fit(
@@ -37,7 +81,7 @@ def test_additional_layer():
 
         test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
         results.append((f"{num_layers} layer(s)", test_acc))
-        print(f"   → Test Accuracy: {test_acc:.4f}\n")
+        print(f"Test Accuracy: {test_acc:.4f}\n")
 
     # Plot comparison
     labels = [label for label, _ in results]
@@ -51,7 +95,7 @@ def test_additional_layer():
     plt.grid(axis='y')
     plt.savefig("layer_test_results.png", dpi=300)
     plt.show()
-    print("📊 Layer test results saved as layer_test_results.png")
+    print("Layer test results saved as layer_test_results.png")
 
 
 def test_learning_rates():
@@ -66,9 +110,9 @@ def test_learning_rates():
     learning_rates = [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0]
     test_accuracies = []
 
-    print("📊 Testing different learning rates...\n")
+    print("Testing different learning rates...\n")
     for lr in learning_rates:
-        print(f"🔧 Training with learning rate: {lr}")
+        print(f"Training with learning rate: {lr}")
         model = build_model(learning_rate=lr)
 
         model.fit(
@@ -81,7 +125,7 @@ def test_learning_rates():
 
         test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
         test_accuracies.append(test_acc)
-        print(f"   → Test Accuracy: {test_acc:.4f}\n")
+        print(f"Test Accuracy: {test_acc:.4f}\n")
 
     # Plot the results
     plt.figure(figsize=(8, 5))
@@ -93,7 +137,7 @@ def test_learning_rates():
     plt.grid(True)
     plt.savefig("lr_test_results.png", dpi=300)
     plt.show()
-    print("📈 Learning rate test results saved as lr_test_results.png")
+    print("✅ Learning rate test results saved as lr_test_results.png")
 
 # Load and preprocess the data
 def load_data():
@@ -105,7 +149,7 @@ def load_data():
     return x_train, y_train, x_test, y_test
 
 # Build model
-def build_model(hidden_units=512, activation='relu', learning_rate=0.5, optimizer_type='sgd', num_layers=1):
+def build_model(hidden_units=512, activation='relu', learning_rate=0.5, optimizer_type='sgd', num_layers=2):
     model = models.Sequential()
     model.add(layers.Input(shape=(784,)))
 
@@ -156,7 +200,7 @@ def train_model():
 
     # Evaluate model
     test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
-    print(f"🧪 Final Test Accuracy: {test_acc:.4f}")
+    print(f"Final Test Accuracy: {test_acc:.4f}")
 
     # Predictions and misclassifieds
     predictions = model.predict(x_test)
@@ -220,7 +264,7 @@ def train_model():
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.savefig("training_results.png", dpi=300)
     plt.show()
-    print("📷 Plot saved to training_results.png")
+    print("✅ Plot saved to training_results.png")
 
 # Load model and run inference
 def run_inference():
@@ -254,8 +298,8 @@ def run_inference():
 # CLI entry point
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="MNIST Digit Classifier")
-    parser.add_argument("--mode", choices=["train", "infer", "lrtest", "layerstest"], required=True,
-                        help="Run mode: train, infer, lrtest, or layerstest")
+    parser.add_argument("--mode", choices=["train", "infer", "lrtest", "layerstest", "batchtest"], required=True,
+                        help="Run mode: train, infer, lrtest, layerstest, or batchtest")
     args = parser.parse_args()
 
     if args.mode == "train":
@@ -266,3 +310,5 @@ if __name__ == "__main__":
         test_learning_rates()
     elif args.mode == "layerstest":
         test_additional_layer()
+    elif args.mode == "batchtest":
+        test_batch_sizes()

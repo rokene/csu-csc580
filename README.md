@@ -82,3 +82,9 @@ Execute the hidden layers test
 ```bash
 make handwritten-digits-ml-app-ltest
 ```
+
+Execute the batch size test
+
+```bash
+make handwritten-digits-ml-app-btest
+```
