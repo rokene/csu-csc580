@@ -22,6 +22,9 @@ FACIAL_RECOGNITION_BASIC_APP=$(FACIAL_RECOGNITION_BASIC_PATH)/app.py
 HANDWRITTEN_DIGITS_PATH=$(MODULE2)
 HANDWRITTEN_DIGITS_APP=$(HANDWRITTEN_DIGITS_PATH)/app.py
 
+FUEL_EFFICIENCY_PATH=$(MODULE3)
+FUEL_EFFICIENCY_APP=$(FUEL_EFFICIENCY_PATH)/app.py
+
 # PYTHON CONFIG ###############################################################
 
 # ubuntu
@@ -57,6 +60,18 @@ pp-draw: ## executes portfolio project Annotation Draw
 		. $(VNV_ACTIVATE) && \
 		$(PYTHON_CONFIG) $(PP)/$(PP_APP)
 	@echo "pp: completed portfolio project annotation drawing"
+
+.PHONY: basic-fuel-efficency-setup
+basic-fuel-efficency-setup: ## setup dependencies and precursors for the basic fuel efficiency app
+	@echo "setting up dependencies and precursors for the basic fuel efficiency app"
+	@cd $(FUEL_EFFICIENCY_PATH) && conda env create -f environment.yml
+
+.PHONY: basic-fuel-efficency
+basic-fuel-efficency: ## executes the basic fuel efficiency app
+	@echo "starting the basic fuel efficiency app"
+	@cd $(FUEL_EFFICIENCY_PATH) && \
+		python $(FUEL_EFFICIENCY_APP)
+	@echo "completed the basic fuel efficiency app"
 
 .PHONY: basic-facial-app-setup
 basic-facial-app-setup: ## setup dependencies and precursors for the basic facial recognition app

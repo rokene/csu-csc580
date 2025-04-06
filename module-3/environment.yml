@@ -1,0 +1,17 @@
+name: fueleff
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip
+  - numpy
+  - matplotlib
+  - seaborn
+  - pandas
+  - scikit-learn
+  - jupyterlab
+  - ucimlrepo
+  - pip:
+      - tensorflow==2.15.0
+      - tensorflow-docs

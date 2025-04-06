@@ -88,3 +88,23 @@ Execute the batch size test
 ```bash
 make handwritten-digits-ml-app-btest
 ```
+
+## Fuel Efficiency
+
+Setup Environment.
+
+```bash
+make basic-fuel-efficency-setup
+```
+
+Make sure you are in the `fueleff` conda env.
+
+```bash
+conda activate fueleff
+```
+
+Execute the app.
+
+```bash
+make basic-fuel-efficency
+```
