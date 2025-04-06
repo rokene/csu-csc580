@@ -13,9 +13,12 @@ import tensorflow_docs.plots
 import tensorflow_docs.modeling
 from ucimlrepo import fetch_ucirepo
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 import os
 import sys
 
+# Global variables
 MODEL_PATH = 'fuel_efficiency_model.keras'
 PLOTS_DIR = 'plots'
 
@@ -27,24 +30,20 @@ def load_data():
     dataset = pd.concat([X, y], axis=1)
     return dataset
 
-def build_model(input_shape):
+def build_neural_model(input_shape):
     model = keras.Sequential([
         layers.Dense(64, activation='relu', input_shape=[input_shape]),
         layers.Dense(64, activation='relu'),
         layers.Dense(1)
     ])
-
     optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001)
-
-    model.compile(
-        loss='mse',
-        optimizer=optimizer,
-        metrics=['mae', 'mse']
-    )
+    model.compile(loss='mse', optimizer=optimizer, metrics=['mae', 'mse'])
     return model
 
-def train():
+def train(model_type='neural'):
     dataset = load_data()
+    dataset = dataset.dropna() # Drop missing values
+    print("## Dataset Stats:")
     print(dataset.tail())
 
     train_dataset, test_dataset = train_test_split(dataset, test_size=0.2, random_state=0)
@@ -66,71 +65,98 @@ def train():
     # Create plots directory
     os.makedirs(PLOTS_DIR, exist_ok=True)
 
-    # Visualize relationships between features
+    # Visualize features
     sns.pairplot(train_dataset[["cylinders", "displacement", "weight", "acceleration"]], diag_kind="kde")
     plt.savefig(os.path.join(PLOTS_DIR, 'pairplot.png'))
     plt.show()
 
-    model = build_model(len(train_dataset.keys()))
-    model.summary()
+    if model_type == 'neural':
+        print("\nTraining Neural Network model...\n")
+        model = build_neural_model(len(train_dataset.keys()))
+        model.summary()
 
-    early_stop = tf.keras.callbacks.EarlyStopping(
-        monitor='val_loss',
-        patience=10,
-        restore_best_weights=True
-    )
+        early_stop = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            patience=10,
+            restore_best_weights=True
+        )
 
-    EPOCHS = 1000
+        EPOCHS = 1000
 
-    history = model.fit(
-        normed_train_data, train_labels,
-        epochs=EPOCHS,
-        batch_size=64,
-        validation_split=0.2,
-        verbose=0,
-        callbacks=[early_stop, tfdocs.modeling.EpochDots()]
-    )
+        history = model.fit(
+            normed_train_data, train_labels,
+            epochs=EPOCHS,
+            batch_size=64,
+            validation_split=0.2,
+            verbose=0,
+            callbacks=[early_stop, tfdocs.modeling.EpochDots()]
+        )
 
-    # Save training history
-    hist = pd.DataFrame(history.history)
-    hist['epoch'] = history.epoch
-    
-    print("History details:")
-    print(hist.tail())
+        # Save training history
+        hist = pd.DataFrame(history.history)
+        hist['epoch'] = history.epoch
+        print("# Training Stats:")
+        print(hist.tail())
 
-    # Create plotter
-    plotter = tfdocs.plots.HistoryPlotter(smoothing_std=2)
+        plotter = tfdocs.plots.HistoryPlotter(smoothing_std=2)
 
-    # Plot Mean Absolute Error
-    plotter.plot({'Basic': history}, metric="mae")
-    plt.yscale('log')
-    plt.ylabel('Mean Absolute Error [MPG]')
-    plt.xlabel('Epoch')
-    plt.title('Training MAE over Epochs (Log Scale)')
-    plt.grid(True)
-    plt.savefig(os.path.join(PLOTS_DIR, 'mae_plot.png'))
-    plt.show()
+        # Plot MAE
+        plotter.plot({'Basic': history}, metric="mae")
+        plt.yscale('log')
+        plt.ylabel('Mean Absolute Error [MPG]')
+        plt.xlabel('Epoch')
+        plt.title('Training MAE over Epochs (Log Scale)')
+        plt.grid(True)
+        plt.savefig(os.path.join(PLOTS_DIR, 'mae_plot.png'))
+        plt.show()
 
-    # Plot Mean Squared Error
-    plotter.plot({'Basic': history}, metric="mse")
-    plt.yscale('log')
-    plt.ylabel('Mean Squared Error [MPG²]')
-    plt.xlabel('Epoch')
-    plt.title('Training MSE over Epochs (Log Scale)')
-    plt.grid(True, which="both", ls="--")
-    plt.savefig(os.path.join(PLOTS_DIR, 'mse_plot.png'))
-    plt.show()
+        # Plot MSE
+        plotter.plot({'Basic': history}, metric="mse")
+        plt.yscale('log')
+        plt.ylabel('Mean Squared Error [MPG²]')
+        plt.xlabel('Epoch')
+        plt.title('Training MSE over Epochs (Log Scale)')
+        plt.grid(True, which="both", ls="--")
+        plt.savefig(os.path.join(PLOTS_DIR, 'mse_plot.png'))
+        plt.show()
 
-    # Evaluate the model
-    loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=2)
-    print(f"Testing set Mean Abs Error: {mae:.2f} MPG")
+        # Evaluate the model
+        loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=2)
+        print(f"## Neural Net Testing set Mean Absolute Error: {mae:.2f} MPG")
+        print(f"## Neural Net Testing set Mean Squared Error: {mse:.2f} MPG")
+        print(f"## Neural Net Testing set Loss: {loss:.2f} MPG")
 
-    # Save the model
-    model.save(MODEL_PATH)
-    print(f"\nModel saved to {MODEL_PATH}")
+        # Save the model
+        model.save(MODEL_PATH)
+        print(f"\nModel saved to {MODEL_PATH}")
+
+    elif model_type == 'linear':
+        print("\nTraining Linear Regression model...\n")
+        model = LinearRegression()
+        model.fit(normed_train_data, train_labels)
+
+        predictions = model.predict(normed_test_data)
+
+        mae = mean_absolute_error(test_labels, predictions)
+        mse = mean_squared_error(test_labels, predictions)
+
+        print(f"Linear Regression Testing set Mean Abs Error: {mae:.2f} MPG")
+        print(f"Linear Regression Testing set Mean Squared Error: {mse:.2f} MPG²")
+
+        # Save coefficients and intercept
+        coef_path = os.path.join(PLOTS_DIR, 'linear_model_coefficients.txt')
+        with open(coef_path, 'w') as f:
+            f.write("Linear Regression Coefficients:\n")
+            for feature, coef in zip(train_dataset.columns, model.coef_):
+                f.write(f"{feature}: {coef}\n")
+            f.write(f"Intercept: {model.intercept_}\n")
+
+        print(f"\nCoefficients saved to {coef_path}")
+    else:
+        print("Unknown model type. Choose 'neural' or 'linear'.")
 
 def infer():
-    # Load the trained model
+    # Only supports neural network inference for now
     try:
         model = keras.models.load_model(MODEL_PATH)
         print(f"Model loaded from {MODEL_PATH}")
@@ -138,7 +164,6 @@ def infer():
         print(f"Error loading model: {e}")
         sys.exit(1)
 
-    # Load dataset to recreate normalization
     dataset = load_data()
     dataset.pop('mpg')
     train_stats = dataset.describe().transpose()
@@ -146,7 +171,6 @@ def infer():
     def normalize(x):
         return (x - train_stats['mean']) / train_stats['std']
 
-    # Inference loop
     def predict_efficiency():
         print("\n--- Fuel Efficiency Prediction ---")
         while True:
@@ -186,10 +210,11 @@ def infer():
 def main():
     parser = argparse.ArgumentParser(description="Fuel Efficiency Prediction Model")
     parser.add_argument('--mode', choices=['train', 'infer'], required=True, help="Mode to run the script in: train or infer")
+    parser.add_argument('--model', choices=['neural', 'linear'], default='neural', help="Type of model to train: neural or linear (default neural)")
     args = parser.parse_args()
 
     if args.mode == 'train':
-        train()
+        train(model_type=args.model)
     elif args.mode == 'infer':
         infer()
     else:

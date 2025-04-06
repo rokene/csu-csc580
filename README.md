@@ -103,10 +103,16 @@ Make sure you are in the `fueleff` conda env.
 conda activate fueleff
 ```
 
+> Supported model: `neural`, `linear`
+
 Execute training.
 
 ```bash
-make basic-fuel-efficency MODE=train
+# traing using neural model
+make basic-fuel-efficency MODE=train MODEL=neural
+
+# traing using linear model
+make basic-fuel-efficency MODE=train MODEL=linear
 ```
 
 Execute trainference.

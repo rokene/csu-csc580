@@ -70,7 +70,7 @@ basic-fuel-efficency-setup: ## setup dependencies and precursors for the basic f
 basic-fuel-efficency: ## executes the basic fuel efficiency app
 	@echo "starting the basic fuel efficiency app"
 	@cd $(FUEL_EFFICIENCY_PATH) && \
-		python $(FUEL_EFFICIENCY_APP) --mode $(MODE)
+		python $(FUEL_EFFICIENCY_APP) --mode $(MODE) $(if $(MODEL),--model $(MODEL))
 	@echo "completed the basic fuel efficiency app"
 
 .PHONY: basic-facial-app-setup
