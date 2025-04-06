@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -12,47 +13,24 @@ import tensorflow_docs.plots
 import tensorflow_docs.modeling
 from ucimlrepo import fetch_ucirepo
 from sklearn.model_selection import train_test_split
+import os
+import sys
 
-# Print TensorFlow version
-print(tf.__version__)
+# Global variables
+MODEL_PATH = 'fuel_efficiency_model.keras'
+PLOTS_DIR = 'plots'
 
-# Fetch the Auto MPG dataset
-auto_mpg = fetch_ucirepo(id=9)
+def load_data():
+    # Fetch the Auto MPG dataset
+    auto_mpg = fetch_ucirepo(id=9)
+    X = auto_mpg.data.features
+    y = auto_mpg.data.targets
+    dataset = pd.concat([X, y], axis=1)
+    return dataset
 
-# Extract features and labels
-X = auto_mpg.data.features
-y = auto_mpg.data.targets
-
-# Combine into a single DataFrame for easier handling
-dataset = pd.concat([X, y], axis=1)
-
-print(dataset.tail())  # Show last few rows
-
-# Train/test split
-train_dataset, test_dataset = train_test_split(dataset, test_size=0.2, random_state=0)
-
-# Separate labels (target variable)
-train_labels = train_dataset.pop('mpg')
-test_labels = test_dataset.pop('mpg')
-
-# Generate summary statistics
-train_stats = train_dataset.describe().transpose()
-
-# Normalize the features
-def normalize(x):
-    return (x - train_stats['mean']) / train_stats['std']
-
-normed_train_data = normalize(train_dataset)
-normed_test_data = normalize(test_dataset)
-
-# Visualize relationships between some features
-sns.pairplot(train_dataset[["cylinders", "displacement", "weight", "acceleration"]], diag_kind="kde")
-plt.show(block=False)
-
-# Build the regression model
-def build_model():
+def build_model(input_shape):
     model = keras.Sequential([
-        layers.Dense(64, activation='relu', input_shape=[len(train_dataset.keys())]),
+        layers.Dense(64, activation='relu', input_shape=[input_shape]),
         layers.Dense(64, activation='relu'),
         layers.Dense(1)
     ])
@@ -66,46 +44,155 @@ def build_model():
     )
     return model
 
-model = build_model()
+def train():
+    dataset = load_data()
+    print(dataset.tail())
 
-# Display the model architecture
-model.summary()
+    train_dataset, test_dataset = train_test_split(dataset, test_size=0.2, random_state=0)
 
-# Try model prediction on a small batch
-example_batch = normed_train_data[:10]
-example_result = model.predict(example_batch)
-print(example_result)
+    train_labels = train_dataset.pop('mpg')
+    test_labels = test_dataset.pop('mpg')
 
-# Train the model
-EPOCHS = 1000
+    train_stats = train_dataset.describe().transpose()
 
-history = model.fit(
-    normed_train_data, train_labels,
-    epochs=EPOCHS,
-    validation_split=0.2,
-    verbose=0,
-    callbacks=[tfdocs.modeling.EpochDots()]
-)
+    def normalize(x):
+        return (x - train_stats['mean']) / train_stats['std']
 
-# Review training history
-hist = pd.DataFrame(history.history)
-hist['epoch'] = history.epoch
-print(hist.tail())
+    # Make normalize globally available
+    globals()['normalize'] = normalize
 
-plotter = tfdocs.plots.HistoryPlotter(smoothing_std=2)
+    normed_train_data = normalize(train_dataset)
+    normed_test_data = normalize(test_dataset)
 
-# Plot Mean Absolute Error
-plotter.plot({'Basic': history}, metric="mae")
-plt.ylim([0, 10])
-plt.ylabel('MAE [MPG]')
-plt.show(block=False)
+    # Create plots directory
+    os.makedirs(PLOTS_DIR, exist_ok=True)
 
-# Plot Mean Squared Error
-plotter.plot({'Basic': history}, metric="mse")
-plt.ylim([0, 20])
-plt.ylabel('MSE [MPG²]')
-plt.show(block=False)
+    # Visualize relationships between features
+    sns.pairplot(train_dataset[["cylinders", "displacement", "weight", "acceleration"]], diag_kind="kde")
+    plt.savefig(os.path.join(PLOTS_DIR, 'pairplot.png'))
+    plt.show()
 
-# Evaluate on test dataset (optional)
-loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=2)
-print(f"Testing set Mean Abs Error: {mae:.2f} MPG")
+    model = build_model(len(train_dataset.keys()))
+    model.summary()
+
+    early_stop = tf.keras.callbacks.EarlyStopping(
+        monitor='val_loss',
+        patience=10,
+        restore_best_weights=True
+    )
+
+    EPOCHS = 200
+
+    history = model.fit(
+        normed_train_data, train_labels,
+        epochs=EPOCHS,
+        batch_size=64,
+        validation_split=0.2,
+        verbose=0,
+        callbacks=[early_stop, tfdocs.modeling.EpochDots()]
+    )
+
+    # Save training history
+    hist = pd.DataFrame(history.history)
+    hist['epoch'] = history.epoch
+    print(hist.tail())
+
+    # Create plotter
+    plotter = tfdocs.plots.HistoryPlotter(smoothing_std=2)
+
+    # Plot Mean Absolute Error
+    plotter.plot({'Basic': history}, metric="mae")
+    plt.ylim([0, 10])
+    plt.ylabel('Mean Absolute Error [MPG]')
+    plt.xlabel('Epoch')
+    plt.title('Training MAE over Epochs')
+    plt.grid(True)
+    plt.savefig(os.path.join(PLOTS_DIR, 'mae_plot.png'))
+    plt.show()
+
+    # Plot Mean Squared Error
+    plotter.plot({'Basic': history}, metric="mse")
+    plt.yscale('log')
+    plt.ylabel('Mean Squared Error [MPG²]')
+    plt.xlabel('Epoch')
+    plt.title('Training MSE over Epochs (Log Scale)')
+    plt.grid(True, which="both", ls="--")
+    plt.savefig(os.path.join(PLOTS_DIR, 'mse_plot.png'))
+    plt.show()
+
+    # Evaluate the model
+    loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=2)
+    print(f"Testing set Mean Abs Error: {mae:.2f} MPG")
+
+    # Save the model
+    model.save(MODEL_PATH)
+    print(f"\nModel saved to {MODEL_PATH}")
+
+def infer():
+    # Load the trained model
+    try:
+        model = keras.models.load_model(MODEL_PATH)
+        print(f"Model loaded from {MODEL_PATH}")
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        sys.exit(1)
+
+    # Load dataset to recreate normalization
+    dataset = load_data()
+    dataset.pop('mpg')
+    train_stats = dataset.describe().transpose()
+
+    def normalize(x):
+        return (x - train_stats['mean']) / train_stats['std']
+
+    # Inference loop
+    def predict_efficiency():
+        print("\n--- Fuel Efficiency Prediction ---")
+        while True:
+            try:
+                cylinders = input("Enter number of cylinders (or type 'exit' to quit): ")
+                if cylinders.lower() == 'exit':
+                    print("Exiting inference mode.")
+                    break
+                cylinders = float(cylinders)
+
+                displacement = float(input("Enter engine displacement (in cubic inches): "))
+                horsepower = float(input("Enter horsepower: "))
+                weight = float(input("Enter weight (in lbs): "))
+                acceleration = float(input("Enter acceleration (0-60 mph time): "))
+                model_year = float(input("Enter model year (e.g., 76 for 1976): "))
+                origin = float(input("Enter origin (1=USA, 2=Europe, 3=Japan): "))
+            except ValueError:
+                print("Invalid input. Please enter numerical values.")
+                continue
+
+            user_input = pd.DataFrame({
+                'cylinders': [cylinders],
+                'displacement': [displacement],
+                'horsepower': [horsepower],
+                'weight': [weight],
+                'acceleration': [acceleration],
+                'model_year': [model_year],
+                'origin': [origin]
+            })
+
+            user_input_normalized = normalize(user_input)
+            prediction = model.predict(user_input_normalized)
+            print(f"\nEstimated fuel efficiency (MPG): {prediction[0][0]:.2f}\n")
+
+    predict_efficiency()
+
+def main():
+    parser = argparse.ArgumentParser(description="Fuel Efficiency Prediction Model")
+    parser.add_argument('--mode', choices=['train', 'infer'], required=True, help="Mode to run the script in: train or infer")
+    args = parser.parse_args()
+
+    if args.mode == 'train':
+        train()
+    elif args.mode == 'infer':
+        infer()
+    else:
+        print("Invalid mode. Choose 'train' or 'infer'.")
+
+if __name__ == '__main__':
+    main()

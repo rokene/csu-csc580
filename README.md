@@ -103,8 +103,14 @@ Make sure you are in the `fueleff` conda env.
 conda activate fueleff
 ```
 
-Execute the app.
+Execute training.
 
 ```bash
-make basic-fuel-efficency
+make basic-fuel-efficency MODE=train
+```
+
+Execute trainference.
+
+```bash
+make basic-fuel-efficency MODE=infer
 ```
