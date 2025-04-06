@@ -16,7 +16,6 @@ from sklearn.model_selection import train_test_split
 import os
 import sys
 
-# Global variables
 MODEL_PATH = 'fuel_efficiency_model.keras'
 PLOTS_DIR = 'plots'
 
@@ -81,7 +80,7 @@ def train():
         restore_best_weights=True
     )
 
-    EPOCHS = 200
+    EPOCHS = 1000
 
     history = model.fit(
         normed_train_data, train_labels,
@@ -95,6 +94,8 @@ def train():
     # Save training history
     hist = pd.DataFrame(history.history)
     hist['epoch'] = history.epoch
+    
+    print("History details:")
     print(hist.tail())
 
     # Create plotter
@@ -102,10 +103,10 @@ def train():
 
     # Plot Mean Absolute Error
     plotter.plot({'Basic': history}, metric="mae")
-    plt.ylim([0, 10])
+    plt.yscale('log')
     plt.ylabel('Mean Absolute Error [MPG]')
     plt.xlabel('Epoch')
-    plt.title('Training MAE over Epochs')
+    plt.title('Training MAE over Epochs (Log Scale)')
     plt.grid(True)
     plt.savefig(os.path.join(PLOTS_DIR, 'mae_plot.png'))
     plt.show()
