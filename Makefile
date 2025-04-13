@@ -16,6 +16,9 @@ MODULE6=$(MAKEFILE_DIR)/module-6
 MODULE7=$(MAKEFILE_DIR)/module-7
 MODULE8=$(MAKEFILE_DIR)/module-8
 
+MILESTONE_1_FACE_PATH=$(MAKEFILE_DIR)/milestone-1
+MILESTONE_1_FACE_APP=$(MILESTONE_1_FACE_PATH)/app.py
+
 FACIAL_RECOGNITION_BASIC_PATH=$(MODULE1)
 FACIAL_RECOGNITION_BASIC_APP=$(FACIAL_RECOGNITION_BASIC_PATH)/app.py
 
@@ -24,6 +27,9 @@ HANDWRITTEN_DIGITS_APP=$(HANDWRITTEN_DIGITS_PATH)/app.py
 
 FUEL_EFFICIENCY_PATH=$(MODULE3)
 FUEL_EFFICIENCY_APP=$(FUEL_EFFICIENCY_PATH)/app.py
+
+TOX21_PATH=$(MODULE4)
+TOX21_APP=$(TOX21_PATH)/app.py
 
 # PYTHON CONFIG ###############################################################
 
@@ -60,6 +66,36 @@ pp-draw: ## executes portfolio project Annotation Draw
 		. $(VNV_ACTIVATE) && \
 		$(PYTHON_CONFIG) $(PP)/$(PP_APP)
 	@echo "pp: completed portfolio project annotation drawing"
+
+.PHONY: m1-face-setup
+m1-face-setup: ## setup dependencies and precursors for m1 face
+	@echo "setting up dependencies and precursors for m1 face"
+	@cd $(MILESTONE_1_FACE_PATH) && conda env create -f environment.yml
+
+.PHONY: m1-face
+m1-face: ## executes m1-face
+	@echo "starting m1-faceapp"
+	@cd $(MILESTONE_1_FACE_PATH) && \
+		python $(MILESTONE_1_FACE_APP)
+	@echo "completed m1-face app"
+
+.PHONY: tox21-setup
+tox21-setup: ## setup dependencies and precursors for tox21
+	@echo "setting up dependencies and precursors for tox21"
+	@cd $(TOX21_PATH) && conda env create -f environment.yml
+
+.PHONY: tox21
+tox21: ## executes tox21
+	@echo "starting tox21 app"
+	@cd $(TOX21_PATH) && \
+		python $(TOX21_APP) --mode $(MODE) $(if $(MODEL),--model $(MODEL))
+	@echo "completed tox21 app"
+
+.PHONY: tox21-tensorboard
+tox21-tensorboard: ## executes tox21 tensorboard
+	@echo "starting tox21 tensorboard"
+	@cd $(TOX21_PATH) && \
+		tensorboard --logdir=logs/fcnet-tox21-tf2
 
 .PHONY: basic-fuel-efficency-setup
 basic-fuel-efficency-setup: ## setup dependencies and precursors for the basic fuel efficiency app

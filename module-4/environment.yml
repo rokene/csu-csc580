@@ -1,0 +1,15 @@
+name: tox21
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip
+  - numpy
+  - matplotlib
+  - scikit-learn
+  - jupyterlab
+  - deepchem
+  - rdkit
+  - pip:
+      - tensorflow==2.15.0

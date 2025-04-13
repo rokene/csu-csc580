@@ -25,6 +25,30 @@ conda init powershell
 
 For a list of commands: `make`
 
+### Milestones
+
+These are Portfolio Project Milestones which are more advance apps.
+
+#### 1 - Facial Recognition
+
+Setup.
+
+```bash
+make m1-face-setup
+```
+
+Make sure you are in the `m1face` conda env.
+
+```bash
+conda activate m1face
+```
+
+Execute.
+
+```bash
+make m1-face
+```
+
 ### Basic Facial Recognition App
 
 One time setup.
@@ -119,4 +143,38 @@ Execute trainference.
 
 ```bash
 make basic-fuel-efficency MODE=infer
+```
+
+## Tox21
+
+Setup Environment.
+
+```bash
+make tox21-setup
+```
+
+Make sure you are in the `tox21` conda env.
+
+```bash
+conda activate tox21
+```
+
+Execute training mode.
+
+```bash
+# traing using neural model
+make tox21 MODE=train
+```
+
+Visualize model in Tensorboard.
+
+```bash
+make tox21-tensorboard
+```
+
+Execute inference mode.
+
+```bash
+# traing using neural model
+make tox21 MODE=infer
 ```

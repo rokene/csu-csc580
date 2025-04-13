@@ -1,0 +1,14 @@
+name: m1face
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - face_recognition
+  - face_recognition_models
+  - dlib
+  - pillow
+  - cmake          # Helps dlib/face_recognition compile properly
+  - boost-cpp      # Helps dlib
+  - pip
+  - pip:
+      - opencv-python
