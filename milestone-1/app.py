@@ -29,9 +29,13 @@ for filename in os.listdir(individual_dir):
         encoding = face_recognition.face_encodings(image, face_locations)[0]
         individual_encodings.append(encoding)
         individual_images.append(Image.fromarray(image))
-        individual_names.append(os.path.splitext(filename)[0])
+        name_without_extension = os.path.splitext(filename)[0]
+        individual_names.append(name_without_extension)
 
 print(f"Loaded {len(individual_encodings)} individual(s).\n")
+
+# Track match counts for each individual
+individual_match_counts = {name: 0 for name in individual_names}
 
 # Process each group image
 for group_filename in os.listdir(group_dir):
@@ -56,6 +60,8 @@ for group_filename in os.listdir(group_dir):
             for j, match in enumerate(matches):
                 if match:
                     individual_name = individual_names[j]
+                    individual_match_counts[individual_name] += 1
+
                     print(f"Match found: {individual_name} in {group_filename}")
 
                     # Draw rectangle around the matched face
@@ -73,7 +79,7 @@ for group_filename in os.listdir(group_dir):
                         (int(group_image_pil.width * max_height / group_image_pil.height), max_height)
                     )
 
-                    # Create side-by-side image
+                    # Create side-by-side combined image
                     total_width = individual_resized.width + group_resized.width
                     combined_image = Image.new('RGB', (total_width, max_height))
                     combined_image.paste(individual_resized, (0, 0))
@@ -85,4 +91,7 @@ for group_filename in os.listdir(group_dir):
                     combined_image.save(output_path)
                     print(f"Saved match image to {output_path}\n")
 
-print("Processing complete!")
+# Final match summary
+print("\nMatch Summary:")
+for name, count in individual_match_counts.items():
+    print(f"  {name}: {count} match(es)")
