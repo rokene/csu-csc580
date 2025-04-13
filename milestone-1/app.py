@@ -7,8 +7,14 @@ group_dir = "group"
 individual_dir = "individual"
 output_dir = "output_matches"
 
-# Create output directory if it doesn't exist
-os.makedirs(output_dir, exist_ok=True)
+# Clean the output directory
+if os.path.exists(output_dir):
+    for file in os.listdir(output_dir):
+        file_path = os.path.join(output_dir, file)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+else:
+    os.makedirs(output_dir)
 
 # Load individual faces
 individual_encodings = []
