@@ -178,3 +178,29 @@ Execute inference mode.
 # traing using neural model
 make tox21 MODE=infer
 ```
+
+## Iris Random Forest Classifier
+
+Setup Environment.
+
+```bash
+make irisrf-setup
+```
+
+Make sure you are in the `iris_rf` conda env.
+
+```bash
+conda activate iris_rf
+```
+
+Execute training mode.
+
+```bash
+make irisrf MODE=train
+```
+
+Execute inference mode.
+
+```bash
+make irisrf MODE=infer
+```

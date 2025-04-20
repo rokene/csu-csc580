@@ -31,6 +31,9 @@ FUEL_EFFICIENCY_APP=$(FUEL_EFFICIENCY_PATH)/app.py
 TOX21_PATH=$(MODULE4)
 TOX21_APP=$(TOX21_PATH)/app.py
 
+IRISRF_PATH=$(MODULE5)
+IRISRF_APP=$(IRISRF_PATH)/app.py
+
 # PYTHON CONFIG ###############################################################
 
 # ubuntu
@@ -78,6 +81,18 @@ m1-face: ## executes m1-face
 	@cd $(MILESTONE_1_FACE_PATH) && \
 		python $(MILESTONE_1_FACE_APP)
 	@echo "completed m1-face app"
+
+.PHONY: irisrf-setup
+irisrf-setup: ## setup dependencies and precursors for irisrf
+	@echo "setting up dependencies and precursors for irisrf"
+	@cd $(IRISRF_PATH) && conda env create -f environment.yml
+
+.PHONY: irisrf
+irisrf: ## executes irisrf
+	@echo "starting irisrf app"
+	@cd $(IRISRF_PATH) && \
+		python $(IRISRF_APP) --mode $(MODE)
+	@echo "completed irisrf app"
 
 .PHONY: tox21-setup
 tox21-setup: ## setup dependencies and precursors for tox21
