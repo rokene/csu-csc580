@@ -94,7 +94,7 @@ cifar-setup: ## setup dependencies and precursors for irisrf
 cifar: ## executes cifar
 	@echo "starting cifar app"
 	@cd $(CIFAR_CLASSIFICATION) && \
-		python $(CIFAR_CLASSIFICATION_APP) --mode $(MODE)
+		python $(CIFAR_CLASSIFICATION_APP) --mode $(MODE) --montage
 	@echo "completed cifar app"
 
 .PHONY: irisrf-setup

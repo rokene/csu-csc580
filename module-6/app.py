@@ -12,7 +12,8 @@ from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers, models, callbacks
+from tensorflow.keras import layers, models, callbacks, preprocessing
+import matplotlib.pyplot as plt
 
 # ------------------------------------------------------------------------------
 # GLOBALS
@@ -125,41 +126,82 @@ def train(args):
 # INFERENCE
 # ------------------------------------------------------------------------------
 def infer(args):
+    """
+    Inference mode:
+      - If args.montage: display a grid of N images per class with prediction confidences
+      - Else if args.image_path: predict on that image
+      - Else: predict on one CIFAR-10 test image by index
+    """
+    import logging
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from tensorflow.keras import preprocessing
+
     logging.info("Starting inference mode")
     model = tf.keras.models.load_model(args.model_path)
     logging.info(f"Loaded model from {args.model_path}")
 
-    # load test set if no image_path
-    if args.image_path:
-        img = tf.keras.preprocessing.image.load_img(
-            args.image_path, target_size=(32,32))
-        img = tf.keras.preprocessing.image.img_to_array(img) / 255.0
-    else:
-        # use CIFAR-10 test data
+    # Montage of test set by predicted class, with % confidence
+    if getattr(args, "montage", False):
+        # load & normalize full CIFAR-10 test set
         (_, _), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-        img = x_test.astype("float32") / 255.0
-        args.image_index = np.clip(args.image_index, 0, len(img)-1)
-        img = img[args.image_index]
-        true_label = int(y_test[args.image_index][0])
+        x_test = x_test.astype("float32") / 255.0
+
+        # predict all
+        probs = model.predict(x_test, batch_size=args.batch_size, verbose=0)
+        preds = np.argmax(probs, axis=1)
+
+        # montage settings
+        N = 5                # images per class
+        K = len(CLASS_NAMES) # number of classes
+        fig, axes = plt.subplots(N, K, figsize=(K*1.5, N*1.5))
+        fig.suptitle("Model Predictions by Class", y=1.02, fontsize=14)
+
+        for cls in range(K):
+            cls_idxs = np.where(preds == cls)[0][:N]
+            for row, idx in enumerate(cls_idxs):
+                ax = axes[row, cls]
+                ax.imshow(x_test[idx])
+                ax.axis("off")
+
+                # get the confidence for the predicted class
+                conf = probs[idx, cls] * 100
+
+                # row 0: show both class name and confidence
+                if row == 0:
+                    ax.set_title(f"{CLASS_NAMES[cls]}\n{conf:.1f}%", fontsize=8)
+                else:
+                    ax.set_title(f"{conf:.1f}%", fontsize=6)
+
+        plt.tight_layout()
+        plt.show()
+        return
+
+    # Single‐image inference
+    if args.image_path:
+        img = preprocessing.image.load_img(
+            args.image_path, target_size=(32, 32)
+        )
+        img = preprocessing.image.img_to_array(img) / 255.0
+    else:
+        (_, _), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+        x_test = x_test.astype("float32") / 255.0
+        idx = np.clip(args.image_index, 0, len(x_test) - 1)
+        img = x_test[idx]
+        true_label = int(y_test[idx][0])
         print(f"True label: {CLASS_NAMES[true_label]}")
 
-    # predict
-    probs = model.predict(img[None, ...])[0]
-    preds = np.argsort(probs)[::-1][:3]
+    # predict top-3 for single image
+    probs_single = model.predict(img[np.newaxis, ...])[0]
+    top3 = np.argsort(probs_single)[-3:][::-1]
 
     print("Top-3 Predictions:")
-    for idx in preds:
-        print(f"  {CLASS_NAMES[idx]:<6} — {probs[idx]*100:5.2f}%")
+    for i in top3:
+        print(f"  {CLASS_NAMES[i]:<6} — {probs_single[i]*100:5.2f}%")
 
-    # show image
-    try:
-        import matplotlib.pyplot as plt
-        plt.imshow(img)
-        plt.axis("off")
-        plt.show()
-    except ImportError:
-        logging.warning("matplotlib not installed, skipping image display")
-
+    plt.imshow(img)
+    plt.axis("off")
+    plt.show()
 
 # ------------------------------------------------------------------------------
 # MAIN / ARGPARSE
@@ -195,6 +237,10 @@ def parse_args():
     p.add_argument(
         "--image_path", type=str, default=None,
         help="Path to an image file to run inference on (infer mode only)"
+    )
+    p.add_argument(
+        "--montage", action="store_true",
+        help="Display a grid of test-set images grouped by predicted class"
     )
     return p.parse_args()
 
