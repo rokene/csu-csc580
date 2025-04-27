@@ -230,3 +230,9 @@ Execute inference mode.
 ```bash
 make cifar MODE=infer
 ```
+
+Start Tensorboard for CIFAR.
+
+```bash
+make cifar-tensorboard
+```

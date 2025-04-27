@@ -83,7 +83,6 @@ m1-face: ## executes m1-face
 	@echo "starting m1-faceapp"
 	@cd $(MILESTONE_1_FACE_PATH) && \
 		python $(MILESTONE_1_FACE_APP)
-	@echo "completed m1-face app"
 
 .PHONY: cifar-setup
 cifar-setup: ## setup dependencies and precursors for irisrf
@@ -95,7 +94,11 @@ cifar: ## executes cifar
 	@echo "starting cifar app"
 	@cd $(CIFAR_CLASSIFICATION) && \
 		python $(CIFAR_CLASSIFICATION_APP) --mode $(MODE) --montage
-	@echo "completed cifar app"
+
+.PHONY: cifar-tensorboard
+cifar-tensorboard: ## starts tensorboard for cifar results
+	@echo "Starting tensorboard for CIFAR"
+	@cd $(CIFAR_CLASSIFICATION); tensorboard --logdir logs
 
 .PHONY: irisrf-setup
 irisrf-setup: ## setup dependencies and precursors for irisrf
