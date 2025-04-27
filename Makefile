@@ -34,6 +34,9 @@ TOX21_APP=$(TOX21_PATH)/app.py
 IRISRF_PATH=$(MODULE5)
 IRISRF_APP=$(IRISRF_PATH)/app.py
 
+CIFAR_CLASSIFICATION=$(MODULE6)
+CIFAR_CLASSIFICATION_APP=$(CIFAR_CLASSIFICATION)/app.py
+
 # PYTHON CONFIG ###############################################################
 
 # ubuntu
@@ -81,6 +84,18 @@ m1-face: ## executes m1-face
 	@cd $(MILESTONE_1_FACE_PATH) && \
 		python $(MILESTONE_1_FACE_APP)
 	@echo "completed m1-face app"
+
+.PHONY: cifar-setup
+cifar-setup: ## setup dependencies and precursors for irisrf
+	@echo "setting up dependencies and precursors for cifar"
+	@cd $(CIFAR_CLASSIFICATION) && conda env create -f environment.yml
+
+.PHONY: cifar
+cifar: ## executes cifar
+	@echo "starting cifar app"
+	@cd $(CIFAR_CLASSIFICATION) && \
+		python $(CIFAR_CLASSIFICATION_APP) --mode $(MODE)
+	@echo "completed cifar app"
 
 .PHONY: irisrf-setup
 irisrf-setup: ## setup dependencies and precursors for irisrf

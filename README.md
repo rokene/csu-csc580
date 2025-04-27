@@ -204,3 +204,29 @@ Execute inference mode.
 ```bash
 make irisrf MODE=infer
 ```
+
+## CIFAR Classification
+
+Setup Environment.
+
+```bash
+make cifar-setup
+```
+
+Make sure you are in the `cifar-cnn` conda env.
+
+```bash
+conda activate cifar-cnn
+```
+
+Execute training mode.
+
+```bash
+make cifar MODE=train
+```
+
+Execute inference mode.
+
+```bash
+make cifar MODE=infer
+```
