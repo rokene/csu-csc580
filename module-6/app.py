@@ -10,19 +10,25 @@ import argparse
 import logging
 from datetime import datetime
 
-import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers, models, callbacks, preprocessing
-import matplotlib.pyplot as plt
+from tensorflow.keras import layers, models, callbacks
 
 # ------------------------------------------------------------------------------
 # GLOBALS
 # ------------------------------------------------------------------------------
+# CIFAR-10 label mapping: index -> human-readable class name
 CLASS_NAMES = [
-    "plane", "car", "bird", "cat", "deer",
-    "dog", "frog", "horse", "ship", "truck"
+    "plane",  # 0 airplane
+    "car",    # 1 automobile
+    "bird",   # 2 bird
+    "cat",    # 3 cat
+    "deer",   # 4 deer
+    "dog",    # 5 dog
+    "frog",   # 6 frog
+    "horse",  # 7 horse
+    "ship",   # 8 ship
+    "truck"   # 9 truck
 ]
-
 
 # ------------------------------------------------------------------------------
 # UTILS
@@ -204,7 +210,7 @@ def infer(args):
     plt.show()
 
 # ------------------------------------------------------------------------------
-# MAIN / ARGPARSE
+# ARGPARSE
 # ------------------------------------------------------------------------------
 def parse_args():
     p = argparse.ArgumentParser(
