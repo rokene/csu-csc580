@@ -51,6 +51,12 @@ Run inference.
 make pp MODE=infer
 ```
 
+Run Tensorboard for the model.
+
+```bash
+make pp-tensorboard
+```
+
 ### Milestones
 
 These are Portfolio Project Milestones which are more advance apps.

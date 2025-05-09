@@ -68,6 +68,12 @@ pp: ## executes portfolio project
 	@cd $(PP) && python $(PP_APP) --mode $(MODE)
 	@echo "pp: completed portfolio project"
 
+.PHONY: pp-tensorboard
+pp-tensorboard: ## executes pp tensorboard
+	@echo "starting portfolio project tensorboard"
+	@cd $(PP) && \
+		tensorboard --logdir=logs/fit
+
 .PHONY: m1-face-setup
 m1-face-setup: ## setup dependencies and precursors for m1 face
 	@echo "setting up dependencies and precursors for m1 face"

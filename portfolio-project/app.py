@@ -1,10 +1,12 @@
 import os
 import argparse
+import datetime
 import numpy as np
 from numpy.random import randint
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, LSTM, Dense
+from tensorflow.keras.callbacks import TensorBoard
 
 
 def define_models(n_input, n_output, n_units):
@@ -57,10 +59,10 @@ def get_dataset(n_in, n_out, cardinality, n_samples):
         tgt = src[:n_out][::-1]
         tgt_in = [0] + tgt[:-1]
 
-        # one-hot encode without extra batch dim
-        src_enc = to_categorical(src, num_classes=cardinality)      # shape (n_in, cardinality)
-        tgt_enc = to_categorical(tgt, num_classes=cardinality)      # shape (n_out, cardinality)
-        tgt_in_enc = to_categorical(tgt_in, num_classes=cardinality)  # shape (n_out, cardinality)
+        # one-hot encode
+        src_enc = to_categorical(src, num_classes=cardinality)
+        tgt_enc = to_categorical(tgt, num_classes=cardinality)
+        tgt_in_enc = to_categorical(tgt_in, num_classes=cardinality)
 
         X1.append(src_enc)
         X2.append(tgt_in_enc)
@@ -120,11 +122,23 @@ if __name__ == '__main__':
     if args.mode == 'train':
         train_model, inf_enc, inf_dec = define_models(n_features, n_features, units)
         train_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+        # Set up TensorBoard logging
+        log_dir = os.path.join('logs', 'fit', datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))
+        tensorboard_cb = TensorBoard(log_dir=log_dir, histogram_freq=1)
+
         X1, X2, y = get_dataset(n_steps_in, n_steps_out, n_features, args.samples)
-        train_model.fit([X1, X2], y, batch_size=batch_size, epochs=epochs, verbose=2)
+        train_model.fit(
+            [X1, X2], y,
+            batch_size=batch_size,
+            epochs=epochs,
+            callbacks=[tensorboard_cb],
+            verbose=2
+        )
         inf_enc.save(args.encoder_path)
         inf_dec.save(args.decoder_path)
         print(f'Training complete. Models saved to {args.encoder_path} and {args.decoder_path}.')
+        print(f'TensorBoard logs written to: {log_dir}')
 
     else:
         if not os.path.exists(args.encoder_path) or not os.path.exists(args.decoder_path):
@@ -134,7 +148,7 @@ if __name__ == '__main__':
         inf_dec = load_model(args.decoder_path, compile=False)
 
         total, correct = 100, 0
-        print(f'Inference accuracy: # iterations {total}.')
+        print(f'Inference accuracy: # iterations {total}')
         for _ in range(total):
             X1s, _, ys = get_dataset(n_steps_in, n_steps_out, n_features, 1)
             yhat = predict_sequence(inf_enc, inf_dec, X1s, n_steps_out, n_features)
