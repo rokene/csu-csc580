@@ -1,0 +1,10 @@
+name: portfolio
+dependencies:
+  - python=3.10
+  - numpy
+  - pandas
+  - scikit-learn
+  - pip
+  - pip:
+    - tensorflow==2.15
+    - keras>=2.11

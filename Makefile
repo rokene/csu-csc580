@@ -59,19 +59,14 @@ help:
 
 .PHONY: pp-setup
 pp-setup: ## setup dependencies and precursors for portfolio project
-	@echo "pp: setting up portfolio project virtual env"
-	@cd $(PP) && $(PYTHON_CONFIG) -m venv venv && \
-		. $(VNV_ACTIVATE) && \
-		$(PYTHON_PIP_CONFIG) install --upgrade pip && \
-		$(PYTHON_PIP_CONFIG) install -r requirements.txt
+	@echo "pp: setting up portfolio project env"
+	@cd $(PP) && conda env create -f environment.yml
 
 .PHONY: pp
-pp-draw: ## executes portfolio project Annotation Draw
-	@echo "pp: starting portfolio project annotation drawing"
-	@cd $(PP) && \
-		. $(VNV_ACTIVATE) && \
-		$(PYTHON_CONFIG) $(PP)/$(PP_APP)
-	@echo "pp: completed portfolio project annotation drawing"
+pp: ## executes portfolio project
+	@echo "pp: starting portfolio project"
+	@cd $(PP) && python $(PP_APP) --mode $(MODE)
+	@echo "pp: completed portfolio project"
 
 .PHONY: m1-face-setup
 m1-face-setup: ## setup dependencies and precursors for m1 face

@@ -25,6 +25,32 @@ conda init powershell
 
 For a list of commands: `make`
 
+### Portfolio Project
+
+Setup
+
+```bash
+make pp-setup
+```
+
+Make sure you are in the `portfolio` conda env.
+
+```bash
+conda activate portfolio
+```
+
+Train models.
+
+```bash
+make pp MODE=train
+```
+
+Run inference.
+
+```bash
+make pp MODE=infer
+```
+
 ### Milestones
 
 These are Portfolio Project Milestones which are more advance apps.
