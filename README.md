@@ -27,6 +27,8 @@ For a list of commands: `make`
 
 ### Portfolio Project
 
+[Project Paper](https://docs.google.com/document/d/1nQ33uiRAcJdrLbZ4_rR1mD2FdYZ4IezqFUa0IdhM5bg/edit?tab=t.0)
+
 #### Flowchart
 
 ```mermaid
