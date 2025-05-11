@@ -27,6 +27,32 @@ For a list of commands: `make`
 
 ### Portfolio Project
 
+#### Flowchart
+
+```mermaid
+flowchart TD
+    A[Start] --> B[Parse CLI args]
+    B --> C{mode == train?}
+    C -- yes --> D[Define & compile models]
+    D --> E[Generate synthetic dataset]
+    E --> F[Train model with TensorBoard callback]
+    F --> G[Save encoder & decoder models]
+    G --> H[Print training summary & log path]
+    H --> Z[End]
+    C -- no --> I[Load saved encoder & decoder]
+    I --> J[Evaluate on held-out samples]
+    J --> K[Print inference accuracy]
+    K --> L[Print sample predictions]
+    L --> M[Interactive loop]
+    M --> N[Get user input sequence]
+    N --> O[One-hot encode & predict sequence]
+    O --> P[Decode & display prediction]
+    P --> M
+    M --> Z[End on exit]
+```
+
+#### Usage
+
 Setup
 
 ```bash
